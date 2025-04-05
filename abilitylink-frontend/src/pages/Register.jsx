@@ -162,11 +162,11 @@ const Register = () => {
                   className="ml-2 block text-sm text-white/80"
                 >
                   I agree to the{" "}
-                  <a href="#" className="text-blue-300 hover:text-blue-200">
+                  <a href="/legal" className="text-blue-300 hover:text-blue-200">
                     Terms
                   </a>{" "}
                   and{" "}
-                  <a href="#" className="text-blue-300 hover:text-blue-200">
+                  <a href="/legal" className="text-blue-300 hover:text-blue-200">
                     Privacy Policy
                   </a>
                 </label>

@@ -26,6 +26,7 @@ import SelectedJobsPage from "./pages/SelectedJobsPage";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import LegalDocuments from "./pages/LegalDocuments";
 
 // Protected Route Component
 const ProtectedRoute = ({ element }) => {
@@ -49,6 +50,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/legal" element={<LegalDocuments />} />
             <Route path="*" element={<NotFound />} />
             <Route
               path="/dashboard"
