@@ -8,7 +8,7 @@ const LegalDocuments = () => {
       id: 'privacy',
       icon: <FaShieldAlt className="text-blue-500 text-3xl" />,
       title: 'Privacy Policy',
-      lastUpdated: 'Last Updated: June 15, 2023',
+      lastUpdated: 'Last Updated: April 05, 2025',
       content: [
         {
           title: 'Information We Collect',
@@ -28,7 +28,7 @@ const LegalDocuments = () => {
       id: 'terms',
       icon: <FaBalanceScale className="text-green-500 text-3xl" />,
       title: 'Terms of Service',
-      lastUpdated: 'Effective: June 15, 2023',
+      lastUpdated: 'Effective: April 05, 2025',
       content: [
         {
           title: 'Account Responsibilities',
@@ -48,7 +48,7 @@ const LegalDocuments = () => {
       id: 'accessibility',
       icon: <FaUniversalAccess className="text-purple-500 text-3xl" />,
       title: 'Accessibility Statement',
-      lastUpdated: 'Updated: June 15, 2023',
+      lastUpdated: 'Updated: April 05, 2025',
       content: [
         {
           title: 'Commitment',
