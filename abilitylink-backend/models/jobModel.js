@@ -37,7 +37,19 @@ const jobSchema = new mongoose.Schema(
         acceptedAt: { type: Date, default: Date.now },
       },
     ],
-    status: { type: String, enum: ["Active", "Closed"], default: "Active" },
+    status: {
+      type: String,
+      enum: ["pending", "active", "rejected", "closed"],
+      default: "pending",
+    },
+    verification: {
+      riskScore: Number,
+      lastVerified: Date,
+      method: String, // 'gemini' or 'basic'
+      redFlags: [String],
+      suggestions: [String],
+    },
+    rejectionReason: String,
   },
   { timestamps: true }
 );

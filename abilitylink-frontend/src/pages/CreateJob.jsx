@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { toast } from "react-toastify";
 
 const CreateJob = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const CreateJob = () => {
   const [currentReq, setCurrentReq] = useState("");
   const [currentSkill, setCurrentSkill] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verificationResult, setVerificationResult] = useState(null);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -48,12 +50,25 @@ const CreateJob = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setVerificationResult(null);
 
     try {
-      await api.post("/jobs", formData);
-      navigate("/jobs");
+      const response = await api.post("/jobs", formData);
+
+      if (response.data.success) {
+        if (response.data.job.status === "active") {
+          toast.success("Job posted successfully!");
+          navigate("/jobs");
+        } else {
+          toast.error("Job rejected. Enter Correct Data.");
+          navigate("/jobs/new");
+        }
+      } else {
+        setVerificationResult(response.data.details);
+        toast.error("Job rejected - suspicious content detected");
+      }
     } catch (error) {
-      console.error("Error creating job:", error);
+      toast.error(error.response?.data?.message || "Error creating job");
     } finally {
       setLoading(false);
     }
@@ -66,6 +81,72 @@ const CreateJob = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-6">
           Post a New Job
         </h1>
+
+        {verificationResult && !verificationResult.isValid && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-red-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Job Rejected
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <ul className="list-disc pl-5 space-y-1">
+                    {verificationResult.redFlags.map((flag, i) => (
+                      <li key={i}>{flag}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {verificationResult?.isValid && verificationResult.riskScore > 70 && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-yellow-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Verification Warning (Risk score:{" "}
+                  {verificationResult.riskScore})
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>Your job posting was accepted but flagged for review:</p>
+                  <ul className="list-disc pl-5 space-y-1 mt-2">
+                    {verificationResult.redFlags.map((flag, i) => (
+                      <li key={i}>{flag}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
@@ -165,7 +246,7 @@ const CreateJob = () => {
                 </button>
               </div>
               <div className="space-y-2">
-                {formData.requirements.map((req, i) => (
+                {formData.requirements?.map((req, i) => (
                   <div
                     key={i}
                     className="flex items-center justify-between bg-gray-50 p-2 rounded"
@@ -206,7 +287,7 @@ const CreateJob = () => {
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {formData.skills.map((skill, i) => (
+                {formData.skills?.map((skill, i) => (
                   <div
                     key={i}
                     className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center"
@@ -270,7 +351,14 @@ const CreateJob = () => {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-end">
+          <div className="mt-8 flex justify-end space-x-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={loading}
@@ -280,7 +368,7 @@ const CreateJob = () => {
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
-              {loading ? "Posting..." : "Post Job"}
+              {loading ? "Verifying..." : "Post Job"}
             </button>
           </div>
         </form>

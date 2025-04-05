@@ -1,11 +1,12 @@
 import Job from "../models/jobModel.js";
 import User from "../models/userModel.js";
+import { verifyJobPosting } from "../utils/geminiVerifier.js";
 import mongoose from "mongoose";
 
 // Get all jobs
 export const getAllJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({ status: "Active" })
+    const jobs = await Job.find({ status: "active" })
       .populate("postedBy", "fullName email")
       .sort({ createdAt: -1 });
     res.json(jobs);
@@ -37,32 +38,82 @@ export const getJobById = async (req, res) => {
   }
 };
 
-// Create a job
+// Job creation with strict validation
 export const createJob = async (req, res) => {
   try {
-    const { user } = req;
+    const { body, user } = req;
 
-    const newJob = new Job({
-      ...req.body,
+    // Verify the job
+    const verification = await verifyJobPosting(body);
+
+    // Only reject obviously scammy jobs
+    if (!verification.isValid && verification.riskScore === 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Job rejected - scam detected",
+        details: verification,
+      });
+    }
+
+    // Store all other jobs (including those needing review)
+    const job = await Job.create({
+      ...body,
       postedBy: user._id,
-    });
-
-    const savedJob = await newJob.save();
-
-    // Add to user's activity log
-    await User.findByIdAndUpdate(user._id, {
-      $push: {
-        activityLog: {
-          type: "JobPosting",
-          details: `Posted job: ${savedJob.title}`,
-          date: new Date(),
-        },
+      status: verification.riskScore < 50 ? "active" : "pending",
+      verification: {
+        riskScore: verification.riskScore,
+        redFlags: verification.redFlags,
+        lastVerified: new Date(),
       },
     });
 
-    res.status(201).json(savedJob);
+    res.status(201).json({
+      success: true,
+      job,
+      verification,
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Error creating job:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+// Separate endpoint for approving pending jobs
+export const approveJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { user } = req;
+
+    // In a real implementation, you would:
+    // 1. Retrieve the job from your temporary storage
+    // 2. Verify admin permissions
+    // 3. Create the actual job record
+
+    // This is a simplified version
+    const job = await Job.findByIdAndUpdate(
+      jobId,
+      { status: "active", approvedBy: user._id, approvedAt: new Date() },
+      { new: true }
+    );
+
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Job approved and published",
+      job,
+    });
+  } catch (error) {
+    console.error("Job approval error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error during job approval",
+    });
   }
 };
 
