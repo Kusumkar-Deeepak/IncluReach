@@ -16,6 +16,9 @@ const MyJobs = () => {
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [loadingApplicant, setLoadingApplicant] = useState(false);
   const [applicantError, setApplicantError] = useState(null);
+  const [closingJobId, setClosingJobId] = useState(null);
+  const [closeError, setCloseError] = useState(null);
+  const [closeConfirmationOpen, setCloseConfirmationOpen] = useState(false);
   const [currentSelection, setCurrentSelection] = useState({
     jobId: null,
     applicantId: null,
@@ -154,6 +157,55 @@ const MyJobs = () => {
     setConfirmationOpen(true);
   };
 
+  const handleCloseJob = async () => {
+    try {
+      if (!currentSelection.jobId) {
+        throw new Error("No job selected");
+      }
+
+      setClosingJobId(currentSelection.jobId);
+      setCloseError(null);
+
+      const { data } = await api.put(`/jobs/${currentSelection.jobId}/close`);
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Failed to close job");
+      }
+
+      // Optimistic UI update
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job._id === currentSelection.jobId
+            ? { ...job, status: "closed" }
+            : job
+        )
+      );
+
+      // Reset state
+      setCloseConfirmationOpen(false);
+      setCurrentSelection({ jobId: null, applicantId: null });
+    } catch (err) {
+      console.error("Error closing job:", err);
+      setCloseError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to close job. Please try again."
+      );
+    } finally {
+      setClosingJobId(null);
+    }
+  };
+
+  const handleCloseConfirmation = (jobId) => {
+    // Close other modals first
+    setConfirmationOpen(false);
+    setIsModalOpen(false);
+
+    setCloseError(null);
+    setCurrentSelection((prev) => ({ ...prev, jobId }));
+    setCloseConfirmationOpen(true);
+  };
+
   if (loading) {
     return (
       <>
@@ -186,6 +238,42 @@ const MyJobs = () => {
 
   return (
     <>
+      {/* Close Job Confirmation Modal */}
+      {closeConfirmationOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Close Job Posting</h2>
+              <p>Are you sure you want to close this job posting? This will:</p>
+              <ul className="list-disc pl-5 mt-2 text-sm text-gray-600">
+                <li>Prevent new applicants from applying</li>
+                <li>Keep the job visible for reference</li>
+                <li>Allow you to reopen it later if needed</li>
+              </ul>
+              {closeError && (
+                <div className="mt-3 text-red-500 text-sm">{closeError}</div>
+              )}
+            </div>
+            <div className="bg-gray-50 px-6 py-3 flex justify-end space-x-3 rounded-b-lg">
+              <button
+                onClick={() => setCloseConfirmationOpen(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCloseJob}
+                disabled={!!closingJobId}
+                className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${
+                  closingJobId ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {closingJobId ? "Closing..." : "Confirm Close"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Navbar />
       <div className="container mx-auto px-4 py-8 min-h-screen">
         {/* Confirmation Modal */}
@@ -583,15 +671,27 @@ const MyJobs = () => {
                     {job.company} • {job.location}
                   </p>
                 </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    job.status === "Active"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {job.status}
-                </span>
+                <div className="flex items-center space-x-3">
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm ${
+                      job.status === "active"
+                        ? "bg-green-100 text-green-800"
+                        : job.status === "closed"
+                        ? "bg-gray-200 text-gray-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                  </span>
+                  {job.status === "active" && (
+                    <button
+                      onClick={() => handleCloseConfirmation(job._id)}
+                      className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                    >
+                      Close Job
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="mt-6">

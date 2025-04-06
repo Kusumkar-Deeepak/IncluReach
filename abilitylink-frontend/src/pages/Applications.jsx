@@ -13,10 +13,7 @@ const Applications = () => {
     const fetchApplications = async () => {
       try {
         const { data } = await api.get("/dashboard/applications");
-
-        // Filter out null jobs and only show applications where user has applied
         const appliedJobs = data.filter((app) => app.job !== null);
-
         setApplications(appliedJobs);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch applications");
@@ -27,6 +24,30 @@ const Applications = () => {
 
     fetchApplications();
   }, []);
+
+  // Helper function to format salary
+  const formatSalary = (salary) => {
+    if (!salary?.amount || !salary.isPublic) return null;
+
+    const currencySymbols = {
+      USD: "$",
+      EUR: "€",
+      GBP: "£",
+      INR: "₹",
+    };
+
+    const periodText = {
+      hour: "/hr",
+      day: "/day",
+      week: "/wk",
+      month: "/mo",
+      year: "/yr",
+    };
+
+    return `${currencySymbols[salary.currency] || salary.currency}${
+      salary.amount
+    }${periodText[salary.period] || ""}`;
+  };
 
   if (loading) {
     return (
@@ -83,21 +104,54 @@ const Applications = () => {
             {applications.map((application) => (
               <div
                 key={application._id}
-                className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition"
+                className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition flex flex-col"
               >
                 <Link
                   to={`/jobs/${application.job._id}`}
-                  className="block p-6 h-full"
+                  className="block p-6 flex-grow"
                 >
                   <h2 className="text-xl font-bold text-gray-800 mb-2">
                     {application.job.title}
                   </h2>
                   <p className="text-gray-600 mb-2">
                     {application.job.company} • {application.job.location}
+                    {application.job.remote && (
+                      <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                        Remote
+                      </span>
+                    )}
                   </p>
+                  {/* Salary Display */}
+                  // In the map function where you render each application:
+                  {application.job.salary?.amount &&
+                    application.job.salary?.isPublic && (
+                      <div className="mb-3">
+                        <span className="font-medium text-gray-800">
+                          {formatSalary(application.job.salary)}
+                        </span>
+                        {application.job.salary.period === "hour" && (
+                          <span className="text-sm text-gray-500 ml-1">
+                            (estimated)
+                          </span>
+                        )}
+                      </div>
+                    )}
                   <p className="text-gray-700 mb-4 line-clamp-3">
                     {application.job.description}
                   </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {application.job.skills?.slice(0, 3).map((skill, index) => (
+                      <span
+                        key={index}
+                        className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </Link>
+
+                <div className="border-t px-6 py-3 bg-gray-50">
                   <div className="text-sm text-gray-500">
                     Applied on{" "}
                     {new Date(application.appliedAt).toLocaleDateString(
@@ -111,7 +165,24 @@ const Applications = () => {
                       }
                     )}
                   </div>
-                </Link>
+                  {application.status && (
+                    <div className="mt-1">
+                      <span
+                        className={`inline-block px-2 py-1 text-xs rounded ${
+                          application.status === "Applied"
+                            ? "bg-blue-100 text-blue-800"
+                            : application.status === "Interview"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : application.status === "Offer"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {application.status}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>

@@ -19,6 +19,18 @@ const jobSchema = new mongoose.Schema(
       type: String,
       enum: ["Mild", "Moderate", "Severe", "Any"],
     },
+
+    salary: {
+      amount: { type: Number },
+      currency: { type: String, default: "USD" },
+      period: {
+        type: String,
+        enum: ["hour", "day", "week", "month", "year"],
+        default: "month",
+      },
+      isPublic: { type: Boolean, default: true },
+    },
+
     postedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     applicants: [
       {

@@ -17,6 +17,12 @@ const CreateJob = () => {
     skills: [""],
     disabilityTypes: [],
     disabilitySeverity: "Any",
+    salary: {
+      amount: "",
+      currency: "USD",
+      period: "month",
+      isPublic: true,
+    },
   });
   const [currentReq, setCurrentReq] = useState("");
   const [currentSkill, setCurrentSkill] = useState("");
@@ -206,6 +212,105 @@ const CreateJob = () => {
               />
               <label htmlFor="remote" className="ml-2 block text-gray-700">
                 Remote position available
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-gray-700 font-medium mb-2">
+                  Salary Amount
+                </label>
+                <input
+                  type="number"
+                  name="salary.amount"
+                  value={formData.salary.amount}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      salary: {
+                        ...prev.salary,
+                        amount: e.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g. 5000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Currency
+                </label>
+                <select
+                  name="salary.currency"
+                  value={formData.salary.currency}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      salary: {
+                        ...prev.salary,
+                        currency: e.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="INR">INR (₹)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Period
+                </label>
+                <select
+                  name="salary.period"
+                  value={formData.salary.period}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      salary: {
+                        ...prev.salary,
+                        period: e.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="hour">Per hour</option>
+                  <option value="day">Per day</option>
+                  <option value="week">Per week</option>
+                  <option value="month">Per month</option>
+                  <option value="year">Per year</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center mt-2">
+              <input
+                type="checkbox"
+                id="salaryVisibility"
+                checked={formData.salary.isPublic}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    salary: {
+                      ...prev.salary,
+                      isPublic: e.target.checked,
+                    },
+                  }))
+                }
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="salaryVisibility"
+                className="ml-2 block text-gray-700"
+              >
+                Show salary publicly
               </label>
             </div>
 

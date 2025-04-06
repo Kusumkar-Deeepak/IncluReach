@@ -24,6 +24,30 @@ const JobsList = () => {
     fetchJobs();
   }, []);
 
+  // Helper function to format salary
+  const formatSalary = (salary) => {
+    if (!salary?.amount || !salary.isPublic) return null;
+
+    const currencySymbols = {
+      USD: "$",
+      EUR: "€",
+      GBP: "£",
+      INR: "₹",
+    };
+
+    const periodText = {
+      hour: "/hr",
+      day: "/day",
+      week: "/wk",
+      month: "/mo",
+      year: "/yr",
+    };
+
+    return `${currencySymbols[salary.currency] || salary.currency}${
+      salary.amount
+    }${periodText[salary.period] || ""}`;
+  };
+
   if (loading) return <div className="text-center py-8">Loading jobs...</div>;
 
   return (
@@ -46,28 +70,46 @@ const JobsList = () => {
           {jobs.map((job) => (
             <div
               key={job._id}
-              className="border rounded-lg p-6 hover:shadow-md transition"
+              className="border rounded-lg p-6 hover:shadow-md transition flex flex-col h-full"
             >
-              <h2 className="text-xl font-semibold text-gray-800">
-                {job.title}
-              </h2>
-              <p className="text-gray-600 mt-1">
-                {job.company} • {job.location}
-              </p>
-
-              <div className="mt-4">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {job.skills.slice(0, 3).map((skill) => (
-                    <span
-                      key={skill}
-                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {skill}
+              <div className="flex-grow">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {job.title}
+                </h2>
+                <p className="text-gray-600 mt-1">
+                  {job.company} • {job.location}
+                  {job.remote && (
+                    <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                      Remote
                     </span>
-                  ))}
-                </div>
+                  )}
+                </p>
 
-                <p className="text-gray-700 line-clamp-3">{job.description}</p>
+                {/* Salary Display */}
+                {job.salary?.isPublic && job.salary?.amount && (
+                  <div className="mt-2">
+                    <span className="font-medium text-gray-800">
+                      {formatSalary(job.salary)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="mt-4">
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {job.skills?.slice(0, 3).map((skill) => (
+                      <span
+                        key={skill}
+                        className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+
+                  <p className="text-gray-700 line-clamp-3">
+                    {job.description}
+                  </p>
+                </div>
               </div>
 
               <div className="mt-6 flex justify-between items-center">

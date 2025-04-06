@@ -21,13 +21,8 @@ const JobDetail = () => {
       try {
         setLoading(true);
         setError(null);
-
         const { data } = await api.get(`/jobs/${id}`);
-
-        if (!data) {
-          throw new Error("Failed to load job details");
-        }
-
+        if (!data) throw new Error("Failed to load job details");
         setJob(data);
       } catch (err) {
         console.error("Error fetching job data:", err);
@@ -36,7 +31,6 @@ const JobDetail = () => {
             err.message ||
             "Failed to load job details"
         );
-
         if (err.response?.status === 404) {
           navigate("/jobs", { replace: true });
           toast.error("Job not found");
@@ -45,18 +39,16 @@ const JobDetail = () => {
         setLoading(false);
       }
     };
-
     fetchJobData();
   }, [id, navigate]);
 
-  // Check application status separately
+  // Check application status
   useEffect(() => {
     const checkApplicationStatus = async () => {
       if (!user) {
         setApplied(false);
         return;
       }
-
       try {
         const { data } = await api.get(`/jobs/${id}/check-applied`);
         setApplied(data?.applied || false);
@@ -64,19 +56,15 @@ const JobDetail = () => {
         console.error("Error checking application status:", err);
       }
     };
-
     checkApplicationStatus();
   }, [id, user]);
 
   const handleApply = async () => {
     try {
       const { data } = await api.post(`/jobs/${id}/apply`);
-
       if (data.success) {
         setApplied(true);
         toast.success(data.message);
-
-        // Update local job data
         if (user) {
           setJob((prev) => ({
             ...prev,
@@ -99,14 +87,76 @@ const JobDetail = () => {
     }
   };
 
-  // Check if user is the job poster or recruiter
+  // Helper functions
   const isJobPosterOrRecruiter =
     user &&
     job?.postedBy &&
     (user._id === job.postedBy._id || user.role === "recruiter");
 
-  // Render loading state
-  if (loading) {
+  const formatSalary = (salary) => {
+    if (!salary?.amount || !salary.isPublic) return null;
+
+    const currencySymbols = { USD: "$", EUR: "€", GBP: "£", INR: "₹" };
+    const periodText = {
+      hour: "/hr",
+      day: "/day",
+      week: "/wk",
+      month: "/mo",
+      year: "/yr",
+    };
+
+    return `${currencySymbols[salary.currency] || salary.currency}${
+      salary.amount
+    }${periodText[salary.period] || ""}`;
+  };
+
+  const getSalaryDetails = () => {
+    if (!job?.salary?.amount || !job.salary.isPublic) return null;
+
+    return (
+      <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+        <h3 className="font-semibold text-lg mb-2">Salary Information</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-gray-600">Amount</p>
+            <p className="font-medium">
+              {formatSalary(job.salary)}
+              {job.salary.period === "hour" && (
+                <span className="text-sm text-gray-500 ml-1">(estimated)</span>
+              )}
+            </p>
+          </div>
+          <div>
+            <p className="text-gray-600">Payment Frequency</p>
+            <p className="font-medium capitalize">
+              {job.salary.period === "hour"
+                ? "Hourly"
+                : job.salary.period === "day"
+                ? "Daily"
+                : job.salary.period === "week"
+                ? "Weekly"
+                : job.salary.period === "month"
+                ? "Monthly"
+                : "Yearly"}
+            </p>
+          </div>
+          <div>
+            <p className="text-gray-600">Currency</p>
+            <p className="font-medium">{job.salary.currency}</p>
+          </div>
+          <div>
+            <p className="text-gray-600">Visibility</p>
+            <p className="font-medium">
+              {job.salary.isPublic ? "Public" : "Private"}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render states
+  if (loading)
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="text-center py-12">
@@ -115,10 +165,8 @@ const JobDetail = () => {
         </div>
       </div>
     );
-  }
 
-  // Render error state
-  if (error) {
+  if (error)
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
@@ -135,10 +183,8 @@ const JobDetail = () => {
         </div>
       </div>
     );
-  }
 
-  // Render not found state
-  if (!job) {
+  if (!job)
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
@@ -157,9 +203,6 @@ const JobDetail = () => {
         </div>
       </div>
     );
-  }
-
-  const isJobPoster = user && job.postedBy && user._id === job.postedBy._id;
 
   return (
     <>
@@ -179,12 +222,23 @@ const JobDetail = () => {
                   </span>
                 )}
               </div>
+
+              {/* Salary Preview */}
+              {job.salary?.isPublic && job.salary?.amount && (
+                <div className="mt-3 flex items-center">
+                  <span className="text-xl font-semibold text-gray-800">
+                    {formatSalary(job.salary)}
+                  </span>
+                  {job.salary.period === "hour" && (
+                    <span className="text-sm text-gray-500 ml-2">
+                      (estimated)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Show apply button only if: */}
-            {/* 1. User is logged in */}
-            {/* 2. User is not the job poster */}
-            {/* 3. User hasn't already applied */}
+            {/* Application Button */}
             {user ? (
               isJobPosterOrRecruiter ? (
                 <span className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">
@@ -215,15 +269,9 @@ const JobDetail = () => {
                 Login to Apply
               </Link>
             )}
-
-            {/* Show message if user is the job poster */}
-            {isJobPoster && (
-              <span className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">
-                Your posted job
-              </span>
-            )}
           </div>
 
+          {/* Job Description */}
           <div className="mt-8 border-t pt-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               Job Description
@@ -235,13 +283,16 @@ const JobDetail = () => {
             </div>
           </div>
 
+          {/* Salary Details Section */}
+          {getSalaryDetails()}
+
+          {/* Requirements and Skills */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-3">
                 Requirements
               </h3>
               <ul className="list-disc pl-5 space-y-2">
-                {/* Add null check for requirements */}
                 {job.requirements?.length > 0 ? (
                   job.requirements.map((req, i) => (
                     <li key={i} className="text-gray-700">
@@ -287,6 +338,7 @@ const JobDetail = () => {
             </div>
           </div>
 
+          {/* Posted By */}
           <div className="mt-8 border-t pt-6">
             <div className="flex justify-between items-center">
               <div>

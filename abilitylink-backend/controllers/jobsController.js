@@ -43,21 +43,24 @@ export const createJob = async (req, res) => {
   try {
     const { body, user } = req;
 
+    // Format salary data
+    const salary = {
+      amount: Number(body.salary?.amount) || 0,
+      currency: body.salary?.currency || "USD",
+      period: body.salary?.period || "month",
+      isPublic: body.salary?.isPublic !== false,
+    };
+
     // Verify the job
-    const verification = await verifyJobPosting(body);
+    const verification = await verifyJobPosting({
+      ...body,
+      salary,
+    });
 
-    // Only reject obviously scammy jobs
-    if (!verification.isValid && verification.riskScore === 100) {
-      return res.status(400).json({
-        success: false,
-        message: "Job rejected - scam detected",
-        details: verification,
-      });
-    }
-
-    // Store all other jobs (including those needing review)
+    // Create job with formatted salary
     const job = await Job.create({
       ...body,
+      salary,
       postedBy: user._id,
       status: verification.riskScore < 50 ? "active" : "pending",
       verification: {
@@ -447,6 +450,47 @@ export const getApplicantDetails = async (req, res) => {
       success: false,
       message: "Failed to fetch applicant details",
       error: error.message,
+    });
+  }
+};
+
+export const closeJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job ID" });
+    }
+
+    const job = await Job.findOneAndUpdate(
+      {
+        _id: jobId,
+        postedBy: userId,
+        status: "active", // Only allow closing active jobs
+      },
+      { $set: { status: "closed" } },
+      { new: true }
+    ).lean();
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found or already closed",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Job successfully closed",
+      job,
+    });
+  } catch (error) {
+    console.error("Error closing job:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
