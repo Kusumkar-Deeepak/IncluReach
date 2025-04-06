@@ -45,12 +45,13 @@ const JobDetail = () => {
   // Check application status
   useEffect(() => {
     const checkApplicationStatus = async () => {
-      if (!user) {
+      if (!user || !job?._id) {
+        // Add null check for job
         setApplied(false);
         return;
       }
       try {
-        const { data } = await api.get(`/jobs/${id}/check-applied`);
+        const { data } = await api.get(`/jobs/${job._id}/check-applied`);
         setApplied(data?.applied || false);
       } catch (err) {
         console.error("Error checking application status:", err);
