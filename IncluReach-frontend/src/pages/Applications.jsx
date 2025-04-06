@@ -10,13 +10,31 @@ const Applications = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // pages/Applications.jsx
     const fetchApplications = async () => {
       try {
         const { data } = await api.get("/dashboard/applications");
-        const appliedJobs = data.filter((app) => app.job !== null);
+
+        if (!data.success) {
+          throw new Error(data.message || "Failed to fetch applications");
+        }
+
+        // Filter out any null jobs and map to expected structure
+        const appliedJobs = data.applications
+          .filter((app) => app.job !== null)
+          .map((app) => ({
+            ...app,
+            appliedAt: app.appliedDate || app.appliedAt, // Handle both field names
+          }));
+
         setApplications(appliedJobs);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch applications");
+        console.error("Fetch applications error:", err);
+        setError(
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to fetch applications"
+        );
       } finally {
         setLoading(false);
       }

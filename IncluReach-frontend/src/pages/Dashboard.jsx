@@ -36,18 +36,40 @@ const Dashboard = () => {
             api.get("/dashboard/selected-jobs"),
           ]);
 
-        // Handle potential undefined responses
+        // Validate and normalize responses
+        const dashboardData = dashboardResponse.data || {};
+        const applicationsData = applicationsResponse.data || {};
+        const selectedJobsData = selectedJobsResponse.data || {};
+
+        // Ensure counts are numbers
+        const applicationsCount = Number.isInteger(applicationsData.count)
+          ? applicationsData.count
+          : Array.isArray(applicationsData.applications)
+          ? applicationsData.applications.length
+          : 0;
+
+        const selectedJobsCount = Number.isInteger(selectedJobsData.count)
+          ? selectedJobsData.count
+          : Array.isArray(selectedJobsData.jobs)
+          ? selectedJobsData.jobs.length
+          : 0;
+
         setDashboardData({
-          profileCompletion: dashboardResponse.data?.profileCompletion || 0,
-          applicationsCount: applicationsResponse.data?.count || 0,
-          selectedJobsCount: selectedJobsResponse.data?.count || 0,
-          activityLog: dashboardResponse.data?.activityLog || [],
+          profileCompletion: Number(dashboardData.profileCompletion) || 0,
+          applicationsCount,
+          selectedJobsCount,
+          activityLog: Array.isArray(dashboardData.activityLog)
+            ? dashboardData.activityLog
+            : [],
         });
       } catch (err) {
         console.error("Dashboard error:", err);
-        setError(
-          err.response?.data?.message || "Failed to load dashboard data"
-        );
+
+        const errorMessage =
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to load dashboard data";
+        setError(errorMessage);
 
         if (err.response?.status === 401) {
           localStorage.removeItem("token");

@@ -138,17 +138,22 @@ export const getDashboardData = async (req, res) => {
 };
 
 // Get all applications for a user
+// controllers/applicationController.js
 export const getApplications = async (req, res) => {
   try {
     const userId = req.user._id;
-    const user = await User.findById(userId).populate({
-      path: "jobApplications.jobId",
-      select: "title company location remote description postedBy",
-      populate: {
-        path: "postedBy",
-        select: "companyName",
-      },
-    });
+
+    const user = await User.findById(userId)
+      .populate({
+        path: "jobApplications.jobId",
+        select:
+          "title company location remote description salary skills postedBy createdAt",
+        populate: {
+          path: "postedBy",
+          select: "companyName fullName",
+        },
+      })
+      .lean();
 
     if (!user) {
       return res.status(404).json({
@@ -157,24 +162,30 @@ export const getApplications = async (req, res) => {
       });
     }
 
-    const applications = user.jobApplications.map((app) => ({
+    // Filter out applications where job might have been deleted
+    const validApplications = user.jobApplications.filter(
+      (app) => app.jobId !== null
+    );
+
+    // Transform the data structure
+    const applications = validApplications.map((app) => ({
       _id: app._id,
       status: app.status,
-      appliedDate: app.appliedAt,
+      appliedAt: app.appliedAt,
       updates: app.updates || [],
-      job: app.jobId,
+      job: app.jobId, // jobId becomes job
     }));
 
-    res.json({
+    res.status(200).json({
       success: true,
-      count: applications.length, // Explicit count
-      applications, // The actual applications array
+      count: applications.length,
+      applications,
     });
   } catch (error) {
-    console.error("Get applications error:", error);
+    console.error("Error fetching applications:", error);
     res.status(500).json({
       success: false,
-      message: "Server error while fetching applications",
+      message: "Failed to fetch applications",
       error: error.message,
     });
   }
