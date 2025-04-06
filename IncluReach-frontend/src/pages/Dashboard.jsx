@@ -36,41 +36,33 @@ const Dashboard = () => {
             api.get("/dashboard/selected-jobs"),
           ]);
 
-        // Validate and normalize responses
-        const dashboardData = dashboardResponse.data || {};
-        const applicationsData = applicationsResponse.data || {};
-        const selectedJobsData = selectedJobsResponse.data || {};
-
-        // Ensure counts are numbers
-        const applicationsCount = Number.isInteger(applicationsData.count)
-          ? applicationsData.count
-          : Array.isArray(applicationsData.applications)
-          ? applicationsData.applications.length
-          : 0;
-
-        const selectedJobsCount = Number.isInteger(selectedJobsData.count)
-          ? selectedJobsData.count
-          : Array.isArray(selectedJobsData.jobs)
-          ? selectedJobsData.jobs.length
-          : 0;
+        // Helper function to safely get counts
+        const getCount = (data, arrayProp) => {
+          if (data?.count !== undefined) return data.count;
+          if (Array.isArray(data?.[arrayProp])) return data[arrayProp].length;
+          if (Array.isArray(data)) return data.length;
+          return 0;
+        };
 
         setDashboardData({
-          profileCompletion: Number(dashboardData.profileCompletion) || 0,
-          applicationsCount,
-          selectedJobsCount,
-          activityLog: Array.isArray(dashboardData.activityLog)
-            ? dashboardData.activityLog
+          profileCompletion:
+            Number(dashboardResponse.data?.profileCompletion) || 0,
+          applicationsCount: getCount(
+            applicationsResponse.data,
+            "applications"
+          ),
+          selectedJobsCount: getCount(selectedJobsResponse.data, "jobs"),
+          activityLog: Array.isArray(dashboardResponse.data?.activityLog)
+            ? dashboardResponse.data.activityLog
             : [],
         });
       } catch (err) {
         console.error("Dashboard error:", err);
-
-        const errorMessage =
+        setError(
           err.response?.data?.message ||
-          err.message ||
-          "Failed to load dashboard data";
-        setError(errorMessage);
-
+            err.message ||
+            "Failed to load dashboard data"
+        );
         if (err.response?.status === 401) {
           localStorage.removeItem("token");
           navigate("/login");
