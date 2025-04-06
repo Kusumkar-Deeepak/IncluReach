@@ -122,7 +122,6 @@ const Applications = () => {
                     )}
                   </p>
                   {/* Salary Display */}
-                  // In the map function where you render each application:
                   {application.job.salary?.amount &&
                     application.job.salary?.isPublic && (
                       <div className="mb-3">
