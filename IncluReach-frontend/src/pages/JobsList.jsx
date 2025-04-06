@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 const JobsList = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Make sure this line exists
   const { user } = useAuth();
 
   useEffect(() => {
@@ -15,8 +16,10 @@ const JobsList = () => {
       try {
         const { data } = await api.get("/jobs");
         setJobs(data);
-      } catch (error) {
-        console.error("Error fetching jobs:", error);
+      } catch (err) {
+        // Changed variable name from 'error' to 'err' to avoid confusion
+        console.error("Error fetching jobs:", err);
+        setError("Failed to load jobs. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -24,7 +27,6 @@ const JobsList = () => {
     fetchJobs();
   }, []);
 
-  // Helper function to format salary
   const formatSalary = (salary) => {
     if (!salary?.amount || !salary.isPublic) return null;
 
@@ -49,6 +51,10 @@ const JobsList = () => {
   };
 
   if (loading) return <div className="text-center py-8">Loading jobs...</div>;
+  if (error)
+    return <div className="text-center py-8 text-red-500">{error}</div>;
+  if (jobs.length === 0)
+    return <div className="text-center py-8">No jobs found</div>;
 
   return (
     <>
@@ -85,7 +91,6 @@ const JobsList = () => {
                   )}
                 </p>
 
-                {/* Salary Display */}
                 {job.salary?.isPublic && job.salary?.amount && (
                   <div className="mt-2">
                     <span className="font-medium text-gray-800">
