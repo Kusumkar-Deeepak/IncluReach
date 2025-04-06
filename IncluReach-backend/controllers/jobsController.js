@@ -123,138 +123,72 @@ export const approveJob = async (req, res) => {
 // Apply for a job
 export const applyForJob = async (req, res) => {
   try {
-    const userId = req.user._id;
     const jobId = req.params.id;
-    const appliedAt = new Date();
+    const userId = req.user._id;
 
     // Validate IDs
-    if (
-      !mongoose.Types.ObjectId.isValid(jobId) ||
-      !mongoose.Types.ObjectId.isValid(userId)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid ID format",
-      });
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job ID" });
     }
 
     // Check if job exists
     const job = await Job.findById(jobId);
     if (!job) {
-      return res.status(404).json({
-        success: false,
-        message: "Job not found",
-      });
-    }
-
-    // Check if user is the job poster
-    if (job.postedBy.toString() === userId.toString()) {
-      return res.status(400).json({
-        success: false,
-        message: "You cannot apply to your own job posting",
-      });
-    }
-
-    // Check if user is a recruiter
-    const user = await User.findById(userId);
-    if (user.role === "recruiter") {
-      return res.status(400).json({
-        success: false,
-        message: "Recruiters cannot apply for jobs",
-      });
+      return res.status(404).json({ message: "Job not found" });
     }
 
     // Check if already applied
-    const alreadyApplied = await User.findOne({
-      _id: userId,
-      "jobApplications.jobId": jobId,
-    });
+    const alreadyApplied = job.applicants.some(
+      (app) => app.user.toString() === userId.toString()
+    );
 
     if (alreadyApplied) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already applied for this job",
-      });
+      return res.status(400).json({ message: "Already applied to this job" });
     }
 
-    // Add application to user
-    await User.findByIdAndUpdate(userId, {
-      $push: {
-        jobApplications: {
-          jobId,
-          status: "Applied",
-          appliedAt,
-          updates: [
-            {
-              type: "StatusChange",
-              message: "Application submitted",
-              date: appliedAt,
-            },
-          ],
-        },
-        activityLog: {
-          type: "Application",
-          details: `Applied for job: ${job.title}`,
-          date: appliedAt,
-        },
-      },
-    });
-
-    // Add user to job's applicants
-    await Job.findByIdAndUpdate(
-      jobId,
-      {
-        $addToSet: {
-          applicants: {
-            user: userId,
-            appliedAt,
-          },
-        },
-      },
-      { new: true }
-    );
+    // Add application
+    job.applicants.push({ user: userId, appliedAt: new Date() });
+    await job.save();
 
     res.status(200).json({
       success: true,
       message: "Application submitted successfully",
-      jobId,
-      appliedAt,
+      appliedAt: new Date(),
     });
   } catch (error) {
-    console.error("Apply for job error:", error);
+    console.error("Error applying for job:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Failed to process application",
+      message: "Failed to apply for job",
     });
   }
 };
 
 export const checkIfApplied = async (req, res) => {
   try {
-    const { id: jobId } = req.params;
+    const jobId = req.params.id;
     const userId = req.user._id;
 
-    // Check if user has applied to this job
-    const user = await User.findOne({
-      _id: userId,
-      "jobApplications.jobId": jobId,
-    });
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid job ID" });
+    }
 
-    // Also check if user is in job's applicants list
     const job = await Job.findOne({
       _id: jobId,
       "applicants.user": userId,
     });
 
-    res.json({
+    res.status(200).json({
       success: true,
-      applied: !!user || !!job,
+      applied: !!job,
     });
   } catch (error) {
-    console.error("Check if applied error:", error);
+    console.error("Error checking application status:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Failed to check application status",
+      message: "Failed to check application status",
     });
   }
 };

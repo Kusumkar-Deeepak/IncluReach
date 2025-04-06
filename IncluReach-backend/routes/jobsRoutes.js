@@ -17,7 +17,7 @@ const router = express.Router();
 
 // Specific routes first
 router.get("/my-jobs", protect, getMyJobs);
-router.get("/my-jobs/check-applied", protect, checkIfApplied); // Add this specific route
+// router.get("/my-jobs/check-applied", protect, checkIfApplied); // Add this specific route
 
 // General routes
 router.get("/", getAllJobs);

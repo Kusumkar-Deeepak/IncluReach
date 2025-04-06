@@ -43,48 +43,58 @@ const JobDetail = () => {
   }, [id, navigate]);
 
   // Check application status
+  // Improve the checkApplicationStatus effect
   useEffect(() => {
     const checkApplicationStatus = async () => {
       if (!user || !job?._id) {
-        // Add null check for job
+        // Add job existence check
         setApplied(false);
         return;
       }
       try {
-        const { data } = await api.get(`/jobs/${job._id}/check-applied`);
+        const { data } = await api.get(`/jobs/${id}/check-applied`);
         setApplied(data?.applied || false);
       } catch (err) {
         console.error("Error checking application status:", err);
+        setApplied(false); // Default to false on error
       }
     };
-    checkApplicationStatus();
-  }, [id, user]);
+
+    if (id && user) {
+      // Only run if we have required data
+      checkApplicationStatus();
+    }
+  }, [id, user, job?._id]); // Add job._id as dependency
 
   const handleApply = async () => {
     try {
-      const { data } = await api.post(`/jobs/${id}/apply`);
+      if (!job?._id) {
+        toast.error("Job information not loaded");
+        return;
+      }
+
+      const { data } = await api.post(`/jobs/${job._id}/apply`);
+
       if (data.success) {
         setApplied(true);
-        toast.success(data.message);
-        if (user) {
-          setJob((prev) => ({
-            ...prev,
-            applicants: [
-              ...(prev.applicants || []),
-              { user: user._id, appliedAt: data.appliedAt },
-            ],
-          }));
-        }
-      } else {
-        toast.error(data.message || "Application failed");
+        toast.success("Application submitted successfully!");
+
+        // Update local state
+        setJob((prev) => ({
+          ...prev,
+          applicants: [
+            ...(prev.applicants || []),
+            { user: user._id, appliedAt: new Date() },
+          ],
+        }));
       }
     } catch (error) {
-      console.error("Error applying for job:", error);
-      toast.error(
+      console.error("Application error:", error);
+      const errorMessage =
         error.response?.data?.message ||
-          error.message ||
-          "Failed to apply for job"
-      );
+        error.message ||
+        "Failed to submit application";
+      toast.error(errorMessage);
     }
   };
 
