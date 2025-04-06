@@ -146,27 +146,34 @@ export const getApplications = async (req, res) => {
       select: "title company location remote description postedBy",
       populate: {
         path: "postedBy",
-        select: "companyName", // or whatever field you want from the poster
+        select: "companyName",
       },
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
-    // Transform the data structure to match frontend expectations
     const applications = user.jobApplications.map((app) => ({
       _id: app._id,
       status: app.status,
       appliedDate: app.appliedAt,
       updates: app.updates || [],
-      job: app.jobId, // jobId becomes job
+      job: app.jobId,
     }));
 
-    res.json(applications);
+    res.json({
+      success: true,
+      count: applications.length, // Explicit count
+      applications, // The actual applications array
+    });
   } catch (error) {
     console.error("Get applications error:", error);
     res.status(500).json({
+      success: false,
       message: "Server error while fetching applications",
       error: error.message,
     });
