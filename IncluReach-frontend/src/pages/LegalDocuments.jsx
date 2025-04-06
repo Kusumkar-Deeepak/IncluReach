@@ -36,7 +36,7 @@ const LegalDocuments = () => {
         },
         {
           title: 'Intellectual Property',
-          text: 'All content on AbilityLinks is protected by copyright laws. Job postings may be shared only through our platform tools.'
+          text: 'All content on IncluReach is protected by copyright laws. Job postings may be shared only through our platform tools.'
         },
         {
           title: 'Termination',
@@ -52,7 +52,7 @@ const LegalDocuments = () => {
       content: [
         {
           title: 'Commitment',
-          text: 'AbilityLinks is committed to WCAG 2.1 AA standards. We continuously improve accessibility for users with diverse disabilities.'
+          text: 'IncluReach is committed to WCAG 2.1 AA standards. We continuously improve accessibility for users with diverse disabilities.'
         },
         {
           title: 'Features',
@@ -60,7 +60,7 @@ const LegalDocuments = () => {
         },
         {
           title: 'Feedback',
-          text: 'Contact our accessibility team at accessibility@abilitylinks.com to report issues or suggest improvements.'
+          text: 'Contact our accessibility team at accessibility@IncluReach.com to report issues or suggest improvements.'
         }
       ]
     }
@@ -149,13 +149,13 @@ const LegalDocuments = () => {
           <p className="mb-6 max-w-lg mx-auto">Our team is happy to answer any questions about our policies or accessibility features.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <a 
-              href="mailto:legal@abilitylinks.com" 
+              href="mailto:legal@IncluReach.com" 
               className="px-6 py-3 bg-white text-blue-600 font-medium rounded-lg hover:bg-gray-100 transition"
             >
               Email Legal Team
             </a>
             <a 
-              href="mailto:accessibility@abilitylinks.com" 
+              href="mailto:accessibility@IncluReach.com" 
               className="px-6 py-3 bg-blue-700 text-white font-medium rounded-lg hover:bg-blue-800 transition"
             >
               Accessibility Support

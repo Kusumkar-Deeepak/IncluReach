@@ -16,7 +16,7 @@ const Home = () => {
         <section className="bg-blue-50 py-20">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-blue-800 mb-6">
-              Welcome to AbilityLinks
+              Welcome to IncluReach
             </h1>
             <p className="text-xl text-gray-700 max-w-3xl mx-auto mb-8">
               Connecting talented individuals with disabilities to inclusive

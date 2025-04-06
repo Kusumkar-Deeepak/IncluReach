@@ -10,7 +10,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo on left */}
         <Link to="/" className="flex flex-col">
-          <span className="text-2xl font-bold leading-tight">AbilityLinks</span>
+          <span className="text-2xl font-bold leading-tight">IncluReach</span>
           <span className="text-blue-200 text-sm -mt-1">
             Empowering Diverse Abilities
           </span>
