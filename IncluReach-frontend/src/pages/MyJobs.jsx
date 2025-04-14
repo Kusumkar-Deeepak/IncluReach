@@ -342,7 +342,7 @@ const MyJobs = () => {
                       <div className="flex items-center gap-4">
                         {selectedApplicant.profile?.profileImage ? (
                           <img
-                            src={`/uploads/${selectedApplicant.profile.profileImage.replace(
+                            src={`https://inclureach-server.onrender.com/uploads/${selectedApplicant.profile.profileImage.replace(
                               "public/uploads/",
                               ""
                             )}`}
@@ -355,6 +355,7 @@ const MyJobs = () => {
                                 "+"
                               );
                               e.target.src = `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=64`;
+                              e.target.onerror = null; // Prevent infinite loop if fallback also fails
                             }}
                           />
                         ) : (
@@ -570,7 +571,10 @@ const MyJobs = () => {
                         {selectedApplicant.profile?.resumeFile ? (
                           <div className="mb-4">
                             <a
-                              href={`/${selectedApplicant.profile.resumeFile}`}
+                              href={`https://inclureach-server.onrender.com/uploads/${selectedApplicant.profile.resumeFile.replace(
+                                "public/uploads/",
+                                ""
+                              )}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:underline"
@@ -602,7 +606,10 @@ const MyJobs = () => {
                                   className="flex items-center gap-2"
                                 >
                                   <a
-                                    href={`/${file}`}
+                                    href={`https://inclureach-server.onrender.com/uploads/${file.replace(
+                                      "public/uploads/",
+                                      ""
+                                    )}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:underline"

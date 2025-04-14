@@ -121,20 +121,27 @@ export const approveJob = async (req, res) => {
 };
 
 // Apply for a job
+
 export const applyForJob = async (req, res) => {
   try {
     const jobId = req.params.id;
     const userId = req.user._id;
 
-    // Validate IDs
+    // Validate Job ID
     if (!mongoose.Types.ObjectId.isValid(jobId)) {
       return res.status(400).json({ message: "Invalid job ID" });
     }
 
-    // Check if job exists
+    // Get Job & User
     const job = await Job.findById(jobId);
+    const user = await User.findById(userId);
+
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
     // Check if already applied
@@ -146,13 +153,38 @@ export const applyForJob = async (req, res) => {
       return res.status(400).json({ message: "Already applied to this job" });
     }
 
-    // Add application
-    job.applicants.push({ user: userId, appliedAt: new Date() });
-    await job.save();
+    // Append to job.applicants
+    job.applicants.push({
+      user: userId,
+      appliedAt: new Date(),
+    });
+
+    // Append to user.jobApplications
+    user.jobApplications.push({
+      jobId: job._id,
+      status: "Applied",
+      appliedDate: new Date(),
+      updates: [
+        {
+          type: "StatusChange",
+          message: "Application submitted",
+        },
+      ],
+    });
+
+    // Add to user activity log
+    user.activityLog.push({
+      type: "Application",
+      details: `Applied to job: ${job.title}`,
+    });
+
+    // Save both documents
+    await Promise.all([job.save(), user.save()]);
 
     res.status(200).json({
       success: true,
       message: "Application submitted successfully",
+      jobId: job._id,
       appliedAt: new Date(),
     });
   } catch (error) {
