@@ -68,7 +68,7 @@ export const verifyJobPosting = async (jobData) => {
 
   // 2. If basic checks pass, verify with Gemini
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `Verify if this is a legitimate job posting (true/false):
         Title: ${jobData.title}
         Company: ${jobData.company}
