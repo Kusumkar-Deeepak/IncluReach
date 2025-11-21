@@ -2,9 +2,12 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const api = axios.create({
-  baseURL: "https://inclureach-server.onrender.com/api",
-  // baseURL: "http://localhost:5000/api",
-  timeout: 60000, // 10 seconds timeout
+  // baseURL: "https://inclureach-server.onrender.com/api",
+  // // baseURL: "http://localhost:5000/api",
+  // timeout: 60000, // 10 seconds timeout
+
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+  timeout: 60000, // 60 seconds timeout
 });
 
 // Request interceptor

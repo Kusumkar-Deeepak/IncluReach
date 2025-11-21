@@ -342,20 +342,22 @@ const MyJobs = () => {
                       <div className="flex items-center gap-4">
                         {selectedApplicant.profile?.profileImage ? (
                           <img
-                            src={`https://inclureach-server.onrender.com/uploads/${selectedApplicant.profile.profileImage.replace(
+                            src={`${
+                              import.meta.env.VITE_FILE_BASE_URL ||
+                              "http://localhost:5000"
+                            }/uploads/${selectedApplicant.profile.profileImage.replace(
                               "public/uploads/",
                               ""
                             )}`}
                             alt="Profile"
                             className="w-16 h-16 rounded-full object-cover"
                             onError={(e) => {
-                              // Fallback to UI Avatar if image fails to load
                               const name = selectedApplicant.fullName.replace(
                                 /\s+/g,
                                 "+"
                               );
                               e.target.src = `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=64`;
-                              e.target.onerror = null; // Prevent infinite loop if fallback also fails
+                              e.target.onerror = null;
                             }}
                           />
                         ) : (
@@ -571,7 +573,10 @@ const MyJobs = () => {
                         {selectedApplicant.profile?.resumeFile ? (
                           <div className="mb-4">
                             <a
-                              href={`https://inclureach-server.onrender.com/uploads/${selectedApplicant.profile.resumeFile.replace(
+                              href={`${
+                                import.meta.env.VITE_FILE_BASE_URL ||
+                                "http://localhost:5000"
+                              }/uploads/${selectedApplicant.profile.resumeFile.replace(
                                 "public/uploads/",
                                 ""
                               )}`}
@@ -606,7 +611,10 @@ const MyJobs = () => {
                                   className="flex items-center gap-2"
                                 >
                                   <a
-                                    href={`https://inclureach-server.onrender.com/uploads/${file.replace(
+                                    href={`${
+                                      import.meta.env.VITE_FILE_BASE_URL ||
+                                      "http://localhost:5000"
+                                    }/uploads/${file.replace(
                                       "public/uploads/",
                                       ""
                                     )}`}

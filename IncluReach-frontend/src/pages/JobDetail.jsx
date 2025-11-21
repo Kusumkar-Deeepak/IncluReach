@@ -12,6 +12,7 @@ const JobDetail = () => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [applied, setApplied] = useState(false);
+  const [isSelected, setIsSelected] = useState(false);
   const [error, setError] = useState(null);
   const { user } = useAuth();
 
@@ -47,24 +48,31 @@ const JobDetail = () => {
   useEffect(() => {
     const checkApplicationStatus = async () => {
       if (!user || !job?._id) {
-        // Add job existence check
         setApplied(false);
+        setIsSelected(false);
         return;
       }
       try {
         const { data } = await api.get(`/jobs/${id}/check-applied`);
         setApplied(data?.applied || false);
+
+        // Check if user is in acceptedApplicants
+        const isUserSelected = job.acceptedApplicants?.some(
+          (acceptedApp) =>
+            acceptedApp.user === user._id || acceptedApp.user._id === user._id
+        );
+        setIsSelected(isUserSelected || false);
       } catch (err) {
         console.error("Error checking application status:", err);
-        setApplied(false); // Default to false on error
+        setApplied(false);
+        setIsSelected(false);
       }
     };
 
     if (id && user) {
-      // Only run if we have required data
       checkApplicationStatus();
     }
-  }, [id, user, job?._id]); // Add job._id as dependency
+  }, [id, user, job?._id]);
 
   const handleApply = async () => {
     try {
@@ -253,10 +261,15 @@ const JobDetail = () => {
             {user ? (
               isJobPosterOrRecruiter ? (
                 <span className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">
-                  {user._id === job.postedBy._id
-                    ? "Your posted job"
-                    : "Recruiters cannot apply"}
+                  Your posted job
                 </span>
+              ) : isSelected ? (
+                <button
+                  disabled
+                  className="px-6 py-2 bg-green-300 text-green-800 rounded-lg font-medium cursor-not-allowed"
+                >
+                  ✓ Selected
+                </button>
               ) : applied ? (
                 <button
                   disabled

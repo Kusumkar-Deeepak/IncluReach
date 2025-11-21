@@ -307,6 +307,7 @@ export const getSelectedJobs = async (req, res) => {
           postedBy: job.postedBy,
         },
         status: "Offer",
+        acceptedAt: acceptanceRecord?.acceptedAt || job.createdAt || new Date(),
         appliedDate:
           acceptanceRecord?.acceptedAt || job.createdAt || new Date(),
         updates: [],

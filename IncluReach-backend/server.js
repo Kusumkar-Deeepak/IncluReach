@@ -38,9 +38,22 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/jobs", jobRoutes);
 
-// Basic route
+// Basic routes
 app.get("/", (req, res) => {
-  res.send("AbilityLink API is running...");
+  res.status(200).json({
+    success: true,
+    message: "IncluReach API is running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: "healthy",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Server setup

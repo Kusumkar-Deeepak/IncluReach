@@ -206,9 +206,11 @@ const SelectedJobsPage = () => {
                       </Link>
                       <span className="text-sm text-gray-500">
                         Selected on{" "}
-                        {new Date(
-                          jobApp.updatedAt || jobApp.acceptedAt
-                        ).toLocaleDateString()}
+                        {jobApp.acceptedAt
+                          ? new Date(jobApp.acceptedAt).toLocaleDateString()
+                          : jobApp.updatedAt
+                          ? new Date(jobApp.updatedAt).toLocaleDateString()
+                          : "Recently"}
                       </span>
                     </div>
                   </div>
